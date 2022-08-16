@@ -36,15 +36,15 @@ class MovingVertices(Scene):
         # manim graph used for the animations
         manimG = Graph.from_networkx(currG, layout=node_pos, labels=True)
 
-        self.play(Create(manimG))
-        self.wait()
+        # self.play(Create(manimG))
+        # self.wait()
 
         grid = NumberPlane().set_opacity(0.5).set_z_index(-2)
-        self.play(FadeIn(grid))
+        # self.play(FadeIn(grid))
                 
         # minSpanTree function determines the MST of the graph and changes graphs to create an MST
-        remem_group = self.minSpanTree(manimG, currG, node_pos, grid)
-
+        remem_group, remem_list = self.minSpanTree(manimG, currG, node_pos, grid)
+        
         # OddNodesPerfMatch function determines the odd degree nodes and performs perfect matching
         # perf_matching is an array of the edges added in the perf matching process
         num_match = 6
@@ -62,7 +62,7 @@ class MovingVertices(Scene):
         # self.play(Create(manimMatch), FadeIn(grid))
         # self.wait()
 
-        perf_matching = self.OddNodesPerfMatch(manimMatch, pMatchG, compMatch, node_pos_match, grid, remem_group)
+        remem_group, remem_list = self.OddNodesPerfMatch(manimMatch, pMatchG, compMatch, node_pos_match, grid, remem_group, remem_list)
 
 
         num_match = 6
@@ -87,22 +87,39 @@ class MovingVertices(Scene):
         grid = NumberPlane().set_opacity(0.5).set_z_index(-2)
 
         manimG = Graph.from_networkx(currG, layout=node_pos, labels=True)
-        self.algorithm(manimG, currG, compG, node_pos, grid)
+        self.algorithm(manimG, currG, compG, node_pos, grid, remem_group, remem_list)
 
     def introScene(self):
         mst_title = Text("Christofides Algorithm").to_edge(UP)
+        ul = Underline(mst_title)
+        self.add(mst_title, ul)
+
+        appTxt = Text("3/2 Approximation Algorithm").next_to(mst_title, DOWN).scale(0.75)
+
+        self.play(FadeIn(appTxt))
+
+        img = ImageMobject("./images/christofides_pic.jpeg")
+        img.next_to(appTxt, DOWN, buff=0.3)
+        
+        self.play(FadeIn(img))
+        self.wait()
+
+        self.play(FadeOut(img))
+        self.remove(mst_title, ul, appTxt)
+
+        self.wait()
+        mst_title = Text("Preliminary Concepts").to_edge(UP)
         self.play(Write(mst_title))
-
-        img = ImageMobject("./images/ProctorGambleTSP.png")
-
-        self.add(img)
-        self.play(img.animate.scale(0.5))
+        self.wait()
+        self.play(Unwrite(mst_title))
         
 
 
     def minSpanTree(self, manimG, currG, node_pos, grid):
         
-        self.play(VGroup(grid, manimG).animate.scale(0.75))
+        grid_graph = VGroup(grid, manimG).scale(0.73)
+        self.play(Create(grid_graph))
+
         mst_title = Text("Minimum Spanning Trees").to_edge(UP).scale(0.8)
         self.play(Write(mst_title))
         
@@ -152,10 +169,10 @@ class MovingVertices(Scene):
                 decimal = DecimalNumber(number=math.hypot(xDiff, yDiff), num_decimal_places=1, font_size=30, stroke_width=1, color=WHITE)
                 edge_sum += math.hypot(xDiff, yDiff)
                 if xDiff > yDiff:
-                    decimal.move_to(np.array([xAvg, yAvg+0.25,0]))
+                    decimal.move_to(np.array([xAvg, yAvg+0.3,0]))
                     dec_group += decimal
                 else:
-                    decimal.move_to(np.array([xAvg+0.25, yAvg,0]))
+                    decimal.move_to(np.array([xAvg+0.3, yAvg,0]))
                     dec_group += decimal
                 decimals.append(decimal)
             
@@ -171,10 +188,10 @@ class MovingVertices(Scene):
             if iter == 0:
                 tc_val.to_corner(UR)
                 dec_group += tc_val
-                dec_group.scale(0.75)
+                dec_group.scale(0.73)
 
                 tc_txt = Text("Total Cost: ").set_color(WHITE)
-                tc_txt.scale(0.525)
+                tc_txt.scale(0.5)
                 tc_txt.next_to(tc_val, LEFT)
 
                 
@@ -183,10 +200,10 @@ class MovingVertices(Scene):
                 self.play(FadeIn(dec_group, tc_txt))
             else:
                 tc_val.next_to(tc_txt, RIGHT)
-                tc_val.scale(0.75)
+                tc_val.scale(0.73)
 
 
-                dec_group.scale(0.75)
+                dec_group.scale(0.73)
                 self.play(FadeIn(tc_val, dec_group))
             self.wait()
             if iter != 2:
@@ -230,11 +247,11 @@ class MovingVertices(Scene):
         puzzletxt2.set_opacity(0.3)
         mstTxtGroup.set_opacity(1)
 
-        self.play(txtM.animate.set_color_by_tex_to_color_map({"M": PURPLE}))
-        self.play(txtCost.animate.set_color_by_tex_to_color_map({"M": PURPLE}))
-        self.play(txt4.animate.set_color_by_tex_to_color_map({"M": PURPLE}))
+        # self.play(txtM.animate.set_color_by_tex_to_color_map({"M": PURPLE}))
+        # self.play(txtCost.animate.set_color_by_tex_to_color_map({"M": PURPLE}))
+        # self.play(txt4.animate.set_color_by_tex_to_color_map({"M": PURPLE}))
 
-        self.play(*[manimG.edges[e].animate.set_stroke(color=PURPLE, width=6) for e in manimG.edges])
+        # self.play(*[manimG.edges[e].animate.set_stroke(color=PURPLE, width=6) for e in manimG.edges])
         self.wait()
 
         mstTxtGroup.set_opacity(0.3)
@@ -284,7 +301,7 @@ class MovingVertices(Scene):
         txt1 = Text("NOTE:").shift(5*RIGHT + 2*UP)
         self.play(FadeIn(txt1))
 
-        costs = MathTex("c(M) \le c(T_G)", tex_to_color_map={"M": PURPLE}).scale(0.65).next_to(txt1, DOWN, buff = 0.5)
+        costs = MathTex("c(M) \le c(T_G)").scale(0.65).next_to(txt1, DOWN, buff = 0.5)
         self.play(FadeIn(costs))
 
         bullet_tex = ["c(T_G - e) \le c(T_G)",
@@ -337,6 +354,7 @@ class MovingVertices(Scene):
         
 
         remem_group = VGroup(remem, costs)
+        remem_list = [remem, costs, surr_rec]
 
         self.play(FadeOut(blist, txt1))
         self.play(Unwrite(mst_title))
@@ -345,12 +363,9 @@ class MovingVertices(Scene):
         self.wait()
         self.play(FadeOut(grid, manimG))
 
-        return remem_group
+        return remem_group, remem_list
 
-        
-        
-
-    def OddNodesPerfMatch(self, manimG, currG, compG, node_pos, grid, remem_group):
+    def OddNodesPerfMatch(self, manimG, currG, compG, node_pos, grid, remem_group, remem_list):
 
         # # list of the odd degree vertices
         # odd_degree_verts = [ i for i in currG.nodes if currG.degree(i) % 2 ]
@@ -361,7 +376,7 @@ class MovingVertices(Scene):
 
         # need to convert the lengths to negative value
         # this is because there a max_weight_matching function, and we need min weight
-        graph_grid = VGroup(grid, manimG).scale(0.75)
+        graph_grid = VGroup(grid, manimG).scale(0.73)
         self.play(Create(graph_grid))
         mst_title = Text("Minimum Cost Perfect Matching").to_edge(UP).scale(0.8)
         self.play(Write(mst_title))
@@ -416,11 +431,11 @@ class MovingVertices(Scene):
                 edge_sum += math.hypot(xDiff, yDiff)
                 if xDiff > yDiff:
                     # add_decimals.append(decimal.animate.move_to(np.array([xAvg, yAvg+0.25,0])))
-                    decimal.move_to(np.array([xAvg, yAvg+0.25,0]))
+                    decimal.move_to(np.array([xAvg, yAvg+0.3,0]))
                     dc_group += decimal
                 else:
                     # add_decimals.append(decimal.animate.move_to(np.array([xAvg+0.25, yAvg,0])))
-                    decimal.move_to(np.array([xAvg+0.25, yAvg,0]))
+                    decimal.move_to(np.array([xAvg+0.3, yAvg,0]))
                     dc_group += decimal
                 decimals.append(decimal)
             
@@ -435,7 +450,7 @@ class MovingVertices(Scene):
             if iter == 0:
                 tc_val.to_corner(UR)
                 dc_group += tc_val
-                dc_group.scale(0.75)
+                dc_group.scale(0.73)
                 tc_txt = Text("Total Cost: ").set_color(WHITE)
                 tc_txt.scale(0.52)
                 tc_txt.next_to(tc_val, LEFT)
@@ -446,9 +461,9 @@ class MovingVertices(Scene):
             else:
                 
                 tc_val.next_to(tc_txt, RIGHT)
-                tc_val.scale(0.75)
+                tc_val.scale(0.73)
 
-                dc_group.scale(0.75)
+                dc_group.scale(0.73)
                 self.play(FadeIn(dc_group))
             self.wait()
             if iter != 2:
@@ -468,18 +483,18 @@ class MovingVertices(Scene):
         mstTxtGroup = VGroup(txtM, txt2).arrange(direction=RIGHT, buff=0.1)
 
         txtCost = MathTex("S").scale(0.65)
-        txt3 = Text(" = Collection of Vertices").scale(0.42)
+        txt3 = Text(" = Collection of Nodes").scale(0.42)
         costTxtGroup = VGroup(txtCost, txt3).arrange(direction=RIGHT, buff=0.1)
 
         txtCost2 = MathTex("T_S").scale(0.65)
         txt4 = Text(" = Optimal Tour of S").scale(0.42)
         costTxtGroup2 = VGroup(txtCost2, txt4).arrange(direction=RIGHT, buff=0.1)
 
-        txtCost3 = MathTex("P_b").scale(0.65).set_color_by_tex_to_color_map({"P_b": DARK_BLUE})
+        txtCost3 = MathTex("P_b").scale(0.65)
         txt5 = Text(" = Blue Edges").scale(0.42)
         costTxtGroup3 = VGroup(txtCost3, txt5).arrange(direction=RIGHT, buff=0.1)
 
-        txtCost4 = MathTex("P_g").scale(0.65).set_color_by_tex_to_color_map({"P_g": GREEN_E})
+        txtCost4 = MathTex("P_g").scale(0.65)
         txt6 = Text(" = Green Edges").scale(0.42)
         costTxtGroup4 = VGroup(txtCost4, txt6).arrange(direction=RIGHT, buff=0.1)
 
@@ -514,7 +529,7 @@ class MovingVertices(Scene):
             if edge in blue_edges:
                 edge_coloring.append(manimG.edges[edge].animate.set_stroke(DARK_BLUE, width=8))
             else:
-                edge_coloring.append(manimG.edges[edge].animate.set_stroke(GREEN_E, width=8))
+                edge_coloring.append(manimG.edges[edge].animate.set_stroke(GREEN_C, width=8))
         self.play(*edge_coloring)
         self.wait()
 
@@ -559,10 +574,12 @@ class MovingVertices(Scene):
         self.play(Create(surr_rec))
 
         remem_group += costs
+        remem_list.append(costs)
+        remem_list.append(surr_rec)
 
         self.play(FadeOut(grid, manimG, blist, txt1))
         self.play(Unwrite(mst_title))
-        return remem_group
+        return remem_group, remem_list
 
     def traceEulerian(self, manimG, currG, node_pos, grid):
         mst_title = Text("Eulerian Circuit").to_edge(UP).scale(0.8)
@@ -575,7 +592,7 @@ class MovingVertices(Scene):
         eul_label = Text("Eulerian Circuit: ").set_color(WHITE)
         eul_label.to_corner(UL)
 
-        grid_graph = VGroup(grid, manimG, eul_label).scale(0.75)
+        grid_graph = VGroup(grid, manimG, eul_label).scale(0.73)
         self.play(Create(grid_graph))
         self.wait()
 
@@ -639,7 +656,7 @@ class MovingVertices(Scene):
         txt1 = Text("NOTE:").shift(5*RIGHT + 2*UP)
         self.play(FadeIn(txt1))
 
-        txtExp = Text("All vertices must have")
+        txtExp = Text("All Nodes must have")
         txtExp2 = Text("an even degree")
 
         expGroup = VGroup(txtExp, txtExp2).arrange(direction=DOWN, aligned_edge=LEFT, buff=0).next_to(txt1, DOWN, buff = 1.2).scale(0.6)
@@ -654,22 +671,22 @@ class MovingVertices(Scene):
         self.play(FadeOut(everything))
         self.wait()
 
-    def algorithm(self, manimG, currG, compG, node_pos, grid):
+    def algorithm(self, manimG, currG, compG, node_pos, grid, remem_group, remem_list):
 
         mst_title = Text("Christofides Algorithm").to_edge(UP, buff=0.25).scale(0.8)
         self.play(Write(mst_title))
 
         
-        grid_graph = VGroup(grid, manimG).scale(0.75).shift(2.5*LEFT)
+        grid_graph = VGroup(grid, manimG).scale(0.73).shift(2.5*LEFT)
         self.play(Create(grid_graph))
 
         txt1 = Text("Steps:")
 
         step1 = Text("1. Build MST").scale(0.5)
-        step2 = Text("2. Find Odd-Degree Vertices").scale(0.5)
+        step2 = Text("2. Find Odd-Degree Nodes").scale(0.5)
         step3 = Text("3. Min-Cost Perfect Matching").scale(0.5)
         step4 = Text("4. Eulerian Circuit").scale(0.5)
-        step5 = Text("5. Remove Duplicate Vertices").scale(0.5)
+        step5 = Text("5. Remove Duplicate Nodes").scale(0.5)
 
 
         txt1.shift(5*RIGHT + 2*UP)
@@ -816,19 +833,50 @@ class MovingVertices(Scene):
 
         step1.set_opacity(0.3)
         step2.set_opacity(1)
+
+        self.play(manimG.animate.remove_edges(*manimG.edges))
+
+        edge_config = { edge : {"stroke_color": DARK_GREY} for edge in currG.edges }
+        self.play(manimG.animate.add_edges(*currG.edges, edge_config=edge_config))
         self.wait()
+        edge_config = { edge : {"stroke_color": YELLOW} for edge in matching }
+        self.play(manimG.animate.add_edges(*matching, edge_config=edge_config))
+        self.wait()
+        self.play(*[manimG.edges[edge].animate.set_stroke(WHITE) for edge in manimG.edges])
 
         step2.set_opacity(0.3)
         step3.set_opacity(1)
+        self.play(Wiggle(remem_list[1]))
         self.wait()
 
         step3.set_opacity(0.3)
         step4.set_opacity(1)
+        self.play(Wiggle(remem_list[3]))
         self.wait()
 
         step4.set_opacity(0.3)
         step5.set_opacity(1)
+        # AnimationGroup(*[Flash(manimG[v]) for v in manimG.vertices])
+        self.play(AnimationGroup(*[Circumscribe(manimG[v], Circle) for v in odd_degree_verts]))
+
+        save_edges = list(manimG.edges)
+        subset_edges = [(0,1), (1,8), (8,5), (5,9), (9,7), (7,0)]
+        edge_config = { edge : {"stroke_color": BLUE} for edge in subset_edges }
+        lines = []
+        for edge in subset_edges:
+            line = Line(manimG[edge[0]], manimG[edge[1]], color=BLUE).set_stroke(width=8)
+            lines.append(line)
+
+        self.play(manimG.animate.remove_edges(*manimG.edges))
+        tsp_edges = [(0,4), (4,1), (1,8), (8,6), (6,5), (5,9), (9,7), (7,3), (3,2), (2,0)]
+        self.play(manimG.animate.add_edges(*tsp_edges))
+        self.play(FadeIn(*lines))
         self.wait()
+
+        self.play(FadeOut(*lines))
+        self.play(manimG.animate.remove_edges(*manimG.edges))
+        self.play(manimG.animate.add_edges(*save_edges))
+
 
         step5.set_opacity(0.3)
         step6.set_opacity(1)
@@ -879,14 +927,14 @@ class MovingVertices(Scene):
             decimal = DecimalNumber(number=math.hypot(xDiff, yDiff), num_decimal_places=1, font_size=30, stroke_width=1, color=WHITE)
             edge_sum += math.hypot(xDiff, yDiff)
             if xDiff > yDiff:
-                decimal.move_to(np.array([xAvg, yAvg+0.25,0]))
+                decimal.move_to(np.array([xAvg, yAvg+0.3,0]))
                 dec_group += decimal
             else:
-                decimal.move_to(np.array([xAvg+0.25, yAvg,0]))
+                decimal.move_to(np.array([xAvg+0.3, yAvg,0]))
                 dec_group += decimal
             decimals.append(decimal)
         
-        dec_group.scale(0.75).shift(2.5*LEFT)
+        dec_group.scale(0.73).shift(2.5*LEFT)
         self.play(FadeIn(dec_group))
         edge_sum = round(edge_sum, 1)
 
@@ -906,7 +954,6 @@ class MovingVertices(Scene):
         print(edge_sum, "chris")
 
         self.play(manimG.animate.remove_edges(*manimG.edges))
-
         tsp_edges = [(0,4), (4,1), (1,8), (8,6), (6,5), (5,9), (9,7), (7,3), (3,2), (2,0)]
         self.play(manimG.animate.add_edges(*tsp_edges))
 
@@ -921,14 +968,14 @@ class MovingVertices(Scene):
             decimal = DecimalNumber(number=math.hypot(xDiff, yDiff), num_decimal_places=1, font_size=30, stroke_width=1, color=WHITE)
             edge_sum += math.hypot(xDiff, yDiff)
             if xDiff > yDiff:
-                decimal.move_to(np.array([xAvg, yAvg-0.25,0]))
+                decimal.move_to(np.array([xAvg, yAvg-0.3,0]))
                 dec_group += decimal
             else:
-                decimal.move_to(np.array([xAvg+0.25, yAvg,0]))
+                decimal.move_to(np.array([xAvg+0.3, yAvg,0]))
                 dec_group += decimal
             decimals.append(decimal)
         
-        dec_group.scale(0.75).shift(2.5*LEFT)
+        dec_group.scale(0.73).shift(2.5*LEFT)
         self.play(FadeIn(dec_group))
         edge_sum = round(edge_sum, 1)
 
@@ -951,44 +998,3 @@ class MovingVertices(Scene):
 
 
         self.play(Unwrite(mst_title))
-        
-    def eulerian_circuit(self, graph, currG, matching, n):
-        # need a multigraph because perfect edges adds duplicate edges sometimes
-        multi_graph = nx.MultiGraph()
-
-        # add the vertices into multigraph
-        multi_graph.add_nodes_from(range(n))
-
-        # add the MST edges and the perfect matching edges
-        multi_graph.add_edges_from(currG.edges())
-        multi_graph.add_edges_from(matching)
-
-        # determine eulerian circuit
-        initial_tour = list ( nx.eulerian_circuit(multi_graph,source=0) )
-
-        # go step by step and turn the edges red as we go through them in the eulerian circuit
-        for edge in initial_tour:
-            if not edge in graph.edges:
-                edge = (edge[1], edge[0])
-            self.play(graph.edges[edge].animate.set_stroke(RED, width=8))
-            self.play(graph.edges[edge].animate.set_stroke(WHITE, width=4))
-        self.wait()
-
-        # remove duplicate visited vertices in the eulerian circuit
-        tour = [ 0 ]
-        for (i,j) in initial_tour:
-            if j not in tour:
-                tour.append(j)
-        
-        # visit the nodes and make them turn yellow
-        # tour is the order of vertices visited in our final circuit
-        for v in tour:
-            self.play(graph[v].animate.set_stroke(YELLOW, width=4))
-            self.play(graph[v].animate.set_stroke(WHITE, width=0))
-
-        # finally remove all the edges and only keep the edges used in the final circuit
-        tour_edges = [ (tour[i-1],tour[i]) for i in range(n) ]
-        self.wait()
-        self.play(graph.animate.remove_edges(*graph.edges))
-        self.wait()
-        self.play(graph.animate.add_edges(*tour_edges))
